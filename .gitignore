@@ -1,0 +1,47 @@
+##############################
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual envs
+venv/
+.venv/
+env/
+.env/
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Distribuição / Pacotes
+build/
+dist/
+*.egg-info/
+
+# Logs / Cache
+*.log
+*.tmp
+.pytest_cache/
+
+# Ambiente / Credenciais
+*.env.local
+.python-version
+
+# Sistema
+Thumbs.db
+Desktop.ini
+
+# Test coverage
+htmlcov/
+.coverage*
+coverage.xml
+
+# Jupyter (caso use depois)
+.ipynb_checkpoints/
+
+# VSCode Python cache
+.mypy_cache/
+.ruff_cache/
+
+##############################
