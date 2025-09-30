@@ -9,22 +9,22 @@ def get_connection():
     return conn
 
 def init_db():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS funcionario (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            cargo TEXT NOT NULL,
-            salario REAL NOT NULL,
-            departamento TEXT,
-            data_admissao TEXT NOT NULL,
-            ativo INTEGER NOT NULL DEFAULT 1
-        );
-        """
-    )
-    conn.commit()
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS funcionario (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                cargo TEXT NOT NULL,
+                salario REAL NOT NULL,
+                departamento TEXT,
+                data_admissao TEXT NOT NULL,
+                ativo INTEGER NOT NULL DEFAULT 1
+            );
+            """
+        )
+        conn.commit()
     
 if __name__ == "__main__":
     init_db()
