@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from app.models.funcionario_model import FuncionarioModel, Funcionario
+from app.models.departamento_model import DepartamentoModel
 
 class FuncionarioController:
     @staticmethod
@@ -19,16 +20,17 @@ class FuncionarioController:
             raise ValueError("ativo deve ser 0 ou 1")
 
     @staticmethod
-    def criar(nome: str, cargo: str, salario: float, departamento: str | None, data_admissao: str) -> int:
-        # Valida dados
+    def criar(nome: str, cargo: str, salario: float, departamento_id: int | None, data_admissao: str) -> int:
         FuncionarioController._validar(nome, cargo, salario, data_admissao, 1)
-        
+        if departamento_id is not None:
+            if DepartamentoModel.obter_por_id(departamento_id) is None:
+                raise ValueError("Departamento informado não existe")
         func = Funcionario(
             id=None,
             nome=nome.strip(),
             cargo=cargo.strip(),
             salario=float(salario),
-            departamento=departamento.strip() if departamento else None,
+            departamento_id=departamento_id,
             data_admissao=data_admissao,
             ativo=1
         )
@@ -43,18 +45,20 @@ class FuncionarioController:
         return FuncionarioModel.obter_por_id(func_id)
 
     @staticmethod
-    def atualizar(func_id: int, nome: str, cargo: str, salario: float, departamento: str | None, data_admissao: str, ativo: int = 1) -> bool:
+    def atualizar(func_id: int, nome: str, cargo: str, salario: float, departamento_id: int | None, data_admissao: str, ativo: int = 1) -> bool:
         existe = FuncionarioModel.obter_por_id(func_id)
         if not existe:
             return False
-        # Valida novos dados
         FuncionarioController._validar(nome, cargo, salario, data_admissao, ativo)
+        if departamento_id is not None:
+            if DepartamentoModel.obter_por_id(departamento_id) is None:
+                raise ValueError("Departamento informado não existe")
         funcionario_atualizado = Funcionario(
             id=func_id,
             nome=nome.strip(),
             cargo=cargo.strip(),
             salario=float(salario),
-            departamento=departamento.strip() if departamento else None,
+            departamento_id=departamento_id,
             data_admissao=data_admissao,
             ativo=ativo
         )

@@ -8,9 +8,10 @@ class Funcionario:
     nome: str
     cargo: str
     salario: float
-    departamento: Optional[str]
+    departamento_id: Optional[int]
     data_admissao: str
     ativo: int = 1
+    departamento_nome: Optional[str] = None  # preenchido em JOIN
 
 class FuncionarioModel:
     @staticmethod
@@ -19,10 +20,10 @@ class FuncionarioModel:
             cur = conn.cursor()
             cur.execute(
                 """
-                INSERT INTO funcionario (nome, cargo, salario, departamento, data_admissao, ativo)
+                INSERT INTO funcionario (nome, cargo, salario, departamento_id, data_admissao, ativo)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (func.nome, func.cargo, func.salario, func.departamento, func.data_admissao, func.ativo)
+                (func.nome, func.cargo, func.salario, func.departamento_id, func.data_admissao, func.ativo)
             )
             conn.commit()
             return cur.lastrowid
@@ -33,23 +34,26 @@ class FuncionarioModel:
             cur = conn.cursor()
             cur.execute(
                 """
-                SELECT id, nome, cargo, salario, departamento, data_admissao, ativo
-                FROM funcionario
-                ORDER BY id
+                SELECT f.id, f.nome, f.cargo, f.salario, f.departamento_id, f.data_admissao, f.ativo,
+                       d.nome AS departamento_nome
+                FROM funcionario f
+                LEFT JOIN departamento d ON d.id = f.departamento_id
+                ORDER BY f.id;
                 """
             )
             rows = cur.fetchall()
             return [
                 Funcionario(
-                    id=row["id"],
-                    nome=row["nome"],
-                    cargo=row["cargo"],
-                    salario=row["salario"],
-                    departamento=row["departamento"],
-                    data_admissao=row["data_admissao"],
-                    ativo=row["ativo"],
+                    id=r["id"],
+                    nome=r["nome"],
+                    cargo=r["cargo"],
+                    salario=r["salario"],
+                    departamento_id=r["departamento_id"],
+                    data_admissao=r["data_admissao"],
+                    ativo=r["ativo"],
+                    departamento_nome=r["departamento_nome"],
                 )
-                for row in rows
+                for r in rows
             ]
 
     @staticmethod
@@ -58,22 +62,25 @@ class FuncionarioModel:
             cur = conn.cursor()
             cur.execute(
                 """
-                SELECT id, nome, cargo, salario, departamento, data_admissao, ativo
-                FROM funcionario
-                WHERE id = ?
+                SELECT f.id, f.nome, f.cargo, f.salario, f.departamento_id, f.data_admissao, f.ativo,
+                       d.nome AS departamento_nome
+                FROM funcionario f
+                LEFT JOIN departamento d ON d.id = f.departamento_id
+                WHERE f.id = ?
                 """,
                 (func_id,)
             )
-            row = cur.fetchone()
-            if row:
+            r = cur.fetchone()
+            if r:
                 return Funcionario(
-                    id=row["id"],
-                    nome=row["nome"],
-                    cargo=row["cargo"],
-                    salario=row["salario"],
-                    departamento=row["departamento"],
-                    data_admissao=row["data_admissao"],
-                    ativo=row["ativo"],
+                    id=r["id"],
+                    nome=r["nome"],
+                    cargo=r["cargo"],
+                    salario=r["salario"],
+                    departamento_id=r["departamento_id"],
+                    data_admissao=r["data_admissao"],
+                    ativo=r["ativo"],
+                    departamento_nome=r["departamento_nome"],
                 )
             return None
 
@@ -86,10 +93,18 @@ class FuncionarioModel:
             cur.execute(
                 """
                 UPDATE funcionario
-                SET nome = ?, cargo = ?, salario = ?, departamento = ?, data_admissao = ?, ativo = ?
+                SET nome = ?, cargo = ?, salario = ?, departamento_id = ?, data_admissao = ?, ativo = ?
                 WHERE id = ?
                 """,
-                (func.nome, func.cargo, func.salario, func.departamento, func.data_admissao, func.ativo, func.id)
+                (
+                    func.nome,
+                    func.cargo,
+                    func.salario,
+                    func.departamento_id,
+                    func.data_admissao,
+                    func.ativo,
+                    func.id,
+                ),
             )
             conn.commit()
             return cur.rowcount > 0

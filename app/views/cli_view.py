@@ -1,16 +1,20 @@
 from app.controllers.funcionario_controller import FuncionarioController
+from app.controllers.departamento_controller import DepartamentoController
 from app.bd.manutencaoBD import zerarBD
 
 def menu():
-    print("\n==================== MENU FUNCIONÁRIOS ====================")
+    print("\n==================== MENU RH MINI ====================")
     print("1. Cadastrar funcionário")
     print("2. Listar funcionários")
     print("3. Buscar funcionário por ID")
     print("4. Atualizar funcionário")
     print("5. Remover funcionário")
-    print("6. Zerar banco (apagar todos os dados)")
+    print("6. Cadastrar departamento")
+    print("7. Listar departamentos")
+    print("8. Remover departamento")
+    print("9. Zerar banco (apagar TODOS os dados)")
     print("0. Sair")
-    print("===========================================================\n")
+    print("=====================================================\n")
 
 def intValid(inteiro):
     while True:
@@ -19,24 +23,36 @@ def intValid(inteiro):
             return int(valor)
         print("Valor inválido. Tente novamente.")
 
+def _escolher_departamento_id() -> int | None:
+    deps = DepartamentoController.listar()
+    if not deps:
+        print("Nenhum departamento cadastrado. Você pode deixar vazio ou criar um agora em 'Gerenciar departamentos'.")
+        return None
+    print("\nDepartamentos disponíveis:")
+    for d in deps:
+        print(f"  {d.id} - {d.nome}")
+    valor = input("Informe o ID do departamento (ou vazio para nenhum): ").strip()
+    if not valor:
+        return None
+    if valor.isdigit():
+        return int(valor)
+    print("ID inválido, ignorando departamento.")
+    return None
+
 def cadastrar():
     print("\n=== CADASTRAR FUNCIONÁRIO ===")
     nome = input("Nome: ").strip()
     cargo = input("Cargo: ").strip()
     salario_str = input("Salário (ex: 4500.50): ").strip()
-    departamento = input("Departamento (opcional): ").strip()
     data_admissao = input("Data de Admissão (YYYY-MM-DD): ").strip()
-    
-    departamento = departamento if departamento else None
-    
+    departamento_id = _escolher_departamento_id()
     try:
         salario = float(salario_str)
     except ValueError:
         print("Salário inválido. Deve ser um número.")
         return
-    
     try:
-        func_id = FuncionarioController.criar(nome, cargo, salario, departamento, data_admissao)
+        func_id = FuncionarioController.criar(nome, cargo, salario, departamento_id, data_admissao)
         print(f"Funcionário cadastrado com ID: {func_id}")
     except ValueError as e:
         print(f"Erro ao cadastrar funcionário: {e}")
@@ -48,7 +64,8 @@ def listar():
         print("Nenhum funcionário cadastrado.")
         return
     for func in funcionarios:
-        print(f"ID: {func.id} \nNome: {func.nome} \nCargo: {func.cargo} \nSalário: {func.salario} \nDepartamento: {func.departamento} \nData Admissão: {func.data_admissao} \nAtivo: {'Sim' if func.ativo else 'Não'}")
+        dep_nome = func.departamento_nome if func.departamento_nome else "(sem)"
+        print(f"ID: {func.id} \nNome: {func.nome} \nCargo: {func.cargo} \nSalário: {func.salario} \nDepartamento: {dep_nome} \nData Admissão: {func.data_admissao} \nAtivo: {'Sim' if func.ativo else 'Não'}")
         print("-" * 40)
 def buscar_por_id():
     print("\n=== BUSCAR FUNCIONÁRIO POR ID ===")
@@ -58,7 +75,8 @@ def buscar_por_id():
         print("Funcionário não encontrado.")
         return
     print("Funcionário encontrado:")
-    print(f"\nID: {func.id} \nNome: {func.nome} \nCargo: {func.cargo} \nSalário: {func.salario} \nDepartamento: {func.departamento} \nData Admissão: {func.data_admissao} \nAtivo: {'Sim' if func.ativo else 'Não'}")
+    dep_nome = func.departamento_nome if func.departamento_nome else "(sem)"
+    print(f"\nID: {func.id} \nNome: {func.nome} \nCargo: {func.cargo} \nSalário: {func.salario} \nDepartamento: {dep_nome} \nData Admissão: {func.data_admissao} \nAtivo: {'Sim' if func.ativo else 'Não'}")
    
 def atualizar():
     print("\n=== ATUALIZAR FUNCIONÁRIO ===")
@@ -72,11 +90,11 @@ def atualizar():
     nome = input("Novo Nome: ").strip()
     cargo = input("Novo Cargo: ").strip()
     salario_str = input("Novo Salário (ex: 4500.50): ").strip()
-    departamento = input("Novo Departamento (opcional): ").strip()
+    print("Alterar departamento:")
+    departamento_id = _escolher_departamento_id()
     data_admissao = input("Nova Data de Admissão (YYYY-MM-DD): ").strip()
     ativo = intValid("Ativo (1 para Sim, 0 para Não): ")
     
-    departamento = departamento if departamento else None
     
     try:
         salario = float(salario_str)
@@ -90,13 +108,43 @@ def atualizar():
         return
     
     try:
-        sucesso = FuncionarioController.atualizar(func_id, nome, cargo, salario, departamento, data_admissao, ativo)
+        sucesso = FuncionarioController.atualizar(func_id, nome, cargo, salario, departamento_id, data_admissao, ativo)
         if sucesso:
             print("Funcionário atualizado com sucesso.")
         else:
             print("Funcionário não encontrado.")
     except ValueError as e:
         print(f"Erro ao atualizar funcionário: {e}")
+        
+def cadastrar_departamento():
+    print("\n=== CADASTRAR DEPARTAMENTO ===")
+    nome = input("Nome do departamento: ").strip()
+    descricao = input("Descrição (opcional): ").strip()
+    descricao = descricao if descricao else None
+    try:
+        dep_id = DepartamentoController.criar(nome, descricao)
+        print(f"Departamento criado com ID {dep_id}")
+    except ValueError as e:
+        print(f"Erro: {e}")
+
+def listar_departamentos():
+    print("\n=== LISTA DE DEPARTAMENTOS ===")
+    deps = DepartamentoController.listar()
+    if not deps:
+        print("Nenhum departamento cadastrado.")
+        return
+    for d in deps:
+        print(f"ID: {d.id} | Nome: {d.nome} | Desc: {d.descricao or ''}")
+
+def remover_departamento():
+    print("\n=== REMOVER DEPARTAMENTO ===")
+    dep_id_str = input("ID do departamento a remover: ").strip()
+    if not dep_id_str.isdigit():
+        print("ID inválido.")
+        return
+    ok = DepartamentoController.remover(int(dep_id_str))
+    print("Removido." if ok else "Não encontrado (ou pode estar vinculado via FK).")
+
 def remover():
     print("\n=== REMOVER FUNCIONÁRIO ===")
     func_id = intValid("ID do funcionário a remover: ")
@@ -126,6 +174,12 @@ def executar_menu():
         elif opc == '5':
             remover()
         elif opc == '6':
+            cadastrar_departamento()
+        elif opc == '7':
+            listar_departamentos()
+        elif opc == '8':
+            remover_departamento()
+        elif opc == '9':
             zerarBD()
         elif opc == '0':
             print('Encerrando...Adeus...Até logo...')
