@@ -5,6 +5,8 @@ DB_PATH = Path(__file__).resolve().parent / "empresa.db"
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
+    # Garante que restrições de chave estrangeira sejam aplicadas
+    conn.execute("PRAGMA foreign_keys = ON;")
     conn.row_factory = sqlite3.Row
     return conn
 

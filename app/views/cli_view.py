@@ -25,6 +25,7 @@ def menuDepartamentos():
     print("1. Cadastrar departamento")
     print("2. Listar departamentos")
     print("3. Remover departamento")
+    print("4. Atualizar departamento")
     print("0. Voltar")
     print("=====================================================\n")
 
@@ -155,7 +156,24 @@ def remover_departamento():
         return
     ok = DepartamentoController.remover(int(dep_id_str))
     print("Removido." if ok else "Não encontrado (ou pode estar vinculado via FK).")
-
+    
+def atualizar_departamento():
+    print("\n=== ATUALIZAR Departamento ===")
+    depart_id = intValid("ID do departamneto a atualizar: ")
+    existe = DepartamentoController.obter(depart_id)
+    if not existe:
+        print("Departamento não encontrado.")
+        return
+    print(f"Atual Departamento: {existe}")
+    
+    nome = input("Novo Nome do departamento: ").strip()
+    descricao = input("Nova Descrição (opcional): ").strip()
+    
+    try:
+        sucesso = DepartamentoController.atualizar(depart_id, nome, descricao if descricao else None)
+    except ValueError as e:
+        print(f"Erro ao atualizar departamento: {e}")
+    
 def remover_funcionario():
     print("\n=== REMOVER FUNCIONÁRIO ===")
     func_id = intValid("ID do funcionário a remover: ")
@@ -169,7 +187,6 @@ def remover_funcionario():
     else:
         print("Funcionário não encontrado.")
 
-    
 def executar_menu():
     while True:
         menuInicial()
@@ -202,6 +219,8 @@ def executar_menu():
                     listar_departamentos()
                 elif opc_dep == '3':
                     remover_departamento()
+                elif opc_dep == '4':
+                    atualizar_departamento()
                 elif opc_dep == '0':
                     break
                 else:
