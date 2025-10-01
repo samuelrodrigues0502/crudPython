@@ -53,3 +53,25 @@ class DepartamentoModel:
             cur.execute("DELETE FROM departamento WHERE id = ?", (dep_id,))
             conn.commit()
             return cur.rowcount > 0
+    @staticmethod
+    def existe_funcionario_para_departamento(dep_id: int) -> bool:
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT 1 FROM funcionario WHERE departamento_id = ? LIMIT 1;", (dep_id,))
+            return cur.fetchone() is not None
+    @staticmethod
+    def atualizar(dep: Departamento) -> bool:
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                UPDATE departamento
+                SET nome = ?, descricao = ?
+                WHERE id = ?
+                """,
+                (dep.nome, dep.descricao, dep.id)
+            )
+            conn.commit()
+            return cur.rowcount > 0
+    
+    

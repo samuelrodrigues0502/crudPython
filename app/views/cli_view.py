@@ -2,18 +2,30 @@ from app.controllers.funcionario_controller import FuncionarioController
 from app.controllers.departamento_controller import DepartamentoController
 from app.bd.manutencaoBD import zerarBD
 
-def menu():
+def menuInicial():
     print("\n==================== MENU RH MINI ====================")
+    print("1. Gerenciar departamentos")
+    print("2. Gerenciar funcionários") 
+    print("3. Zerar banco de dados (apaga TODOS os dados)")
+    print("0. Sair")
+    print("=====================================================\n")
+    
+def menuFuncionarios():
+    print("\n Cadastro de Funcionários")
     print("1. Cadastrar funcionário")
     print("2. Listar funcionários")
     print("3. Buscar funcionário por ID")
     print("4. Atualizar funcionário")
     print("5. Remover funcionário")
-    print("6. Cadastrar departamento")
-    print("7. Listar departamentos")
-    print("8. Remover departamento")
-    print("9. Zerar banco (apagar TODOS os dados)")
-    print("0. Sair")
+    print("0. Voltar")
+    print("=====================================================\n")
+    
+def menuDepartamentos():
+    print("\n Cadastro de Departamentos")
+    print("1. Cadastrar departamento")
+    print("2. Listar departamentos")
+    print("3. Remover departamento")
+    print("0. Voltar")
     print("=====================================================\n")
 
 def intValid(inteiro):
@@ -39,7 +51,7 @@ def _escolher_departamento_id() -> int | None:
     print("ID inválido, ignorando departamento.")
     return None
 
-def cadastrar():
+def cadastrar_funcionario():
     print("\n=== CADASTRAR FUNCIONÁRIO ===")
     nome = input("Nome: ").strip()
     cargo = input("Cargo: ").strip()
@@ -56,8 +68,8 @@ def cadastrar():
         print(f"Funcionário cadastrado com ID: {func_id}")
     except ValueError as e:
         print(f"Erro ao cadastrar funcionário: {e}")
-    
-def listar():
+
+def listar_funcionarios():
     print("\n=== LISTA DE FUNCIONÁRIOS ===")
     funcionarios = FuncionarioController.listar()
     if not funcionarios:
@@ -67,7 +79,7 @@ def listar():
         dep_nome = func.departamento_nome if func.departamento_nome else "(sem)"
         print(f"ID: {func.id} \nNome: {func.nome} \nCargo: {func.cargo} \nSalário: {func.salario} \nDepartamento: {dep_nome} \nData Admissão: {func.data_admissao} \nAtivo: {'Sim' if func.ativo else 'Não'}")
         print("-" * 40)
-def buscar_por_id():
+def buscar_por_id_funcionario():
     print("\n=== BUSCAR FUNCIONÁRIO POR ID ===")
     func_id = intValid("ID do funcionário: ")
     func = FuncionarioController.obter(func_id)
@@ -77,8 +89,8 @@ def buscar_por_id():
     print("Funcionário encontrado:")
     dep_nome = func.departamento_nome if func.departamento_nome else "(sem)"
     print(f"\nID: {func.id} \nNome: {func.nome} \nCargo: {func.cargo} \nSalário: {func.salario} \nDepartamento: {dep_nome} \nData Admissão: {func.data_admissao} \nAtivo: {'Sim' if func.ativo else 'Não'}")
-   
-def atualizar():
+
+def atualizar_funcionario():
     print("\n=== ATUALIZAR FUNCIONÁRIO ===")
     func_id = intValid("ID do funcionário a atualizar: ")
     existe = FuncionarioController.obter(func_id)
@@ -95,7 +107,6 @@ def atualizar():
     data_admissao = input("Nova Data de Admissão (YYYY-MM-DD): ").strip()
     ativo = intValid("Ativo (1 para Sim, 0 para Não): ")
     
-    
     try:
         salario = float(salario_str)
     except ValueError:
@@ -108,7 +119,7 @@ def atualizar():
         return
     
     try:
-        sucesso = FuncionarioController.atualizar(func_id, nome, cargo, salario, departamento_id, data_admissao, ativo)
+        sucesso = FuncionarioController.atualizar(func_id, nome, cargo, salario, departamento_id, data_admissao, ativoInt)
         if sucesso:
             print("Funcionário atualizado com sucesso.")
         else:
@@ -145,7 +156,7 @@ def remover_departamento():
     ok = DepartamentoController.remover(int(dep_id_str))
     print("Removido." if ok else "Não encontrado (ou pode estar vinculado via FK).")
 
-def remover():
+def remover_funcionario():
     print("\n=== REMOVER FUNCIONÁRIO ===")
     func_id = intValid("ID do funcionário a remover: ")
     temCerteza = input(f"Tem certeza que deseja remover o funcionário com ID {func_id}? (s/n): ").strip().lower()
@@ -161,30 +172,46 @@ def remover():
     
 def executar_menu():
     while True:
-        menu()
+        menuInicial()
         opc = input("Digite a opção desejada: ").strip()
-        if opc == "1":
-            cadastrar()
-        elif opc == '2':
-            listar()
-        elif opc == '3':
-            buscar_por_id()
-        elif opc == '4':
-            atualizar()
-        elif opc == '5':
-            remover()
-        elif opc == '6':
-            cadastrar_departamento()
-        elif opc == '7':
-            listar_departamentos()
-        elif opc == '8':
-            remover_departamento()
-        elif opc == '9':
+        if opc == "2":
+            while True:
+                menuFuncionarios()
+                opc_func = input("Digite a opção desejada: ").strip()
+                if opc_func == "1":
+                    cadastrar_funcionario()
+                elif opc_func == '2':
+                    listar_funcionarios()
+                elif opc_func == '3':
+                    buscar_por_id_funcionario()
+                elif opc_func == '4':
+                    atualizar_funcionario()
+                elif opc_func == '5':
+                    remover_funcionario()
+                elif opc_func == '0':
+                    break
+                else:
+                    print("Opção Inválida.")
+        elif opc == "1":
+            while True:
+                menuDepartamentos()
+                opc_dep = input("Digite a opção desejada: ").strip()
+                if opc_dep == "1":
+                    cadastrar_departamento()
+                elif opc_dep == '2':
+                    listar_departamentos()
+                elif opc_dep == '3':
+                    remover_departamento()
+                elif opc_dep == '0':
+                    break
+                else:
+                    print("Opção Inválida.")
+        elif opc == "3":
             zerarBD()
         elif opc == '0':
             print('Encerrando...Adeus...Até logo...')
             break
         else:
             print("Opção Inválida.")
-            
+         
     
