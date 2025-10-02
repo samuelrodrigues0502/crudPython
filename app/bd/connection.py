@@ -1,7 +1,21 @@
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent / "empresa.db"
+# Permite redefinir dinamicamente o caminho do banco durante execução (GUI)
+# Atenção: Todos os models chamam get_connection a cada operação, então
+# atualizar DB_PATH aqui fará com que as próximas operações usem o novo arquivo.
+
+DB_PATH = Path(__file__).resolve().parent / "rhPM.db"
+
+def set_db_path(new_path) -> Path:
+    """Redefine o caminho do banco para new_path e retorna o Path atualizado."""
+    global DB_PATH
+    DB_PATH = Path(new_path).expanduser().resolve()
+    return DB_PATH
+
+def get_db_path() -> Path:
+    """Retorna o caminho atual configurado do banco."""
+    return DB_PATH
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)

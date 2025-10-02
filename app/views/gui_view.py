@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from pathlib import Path
-from app.bd.connection import init_db
+from app.bd.connection import init_db, set_db_path, get_db_path
 from app.controllers.funcionario_controller import FuncionarioController
 from app.controllers.departamento_controller import DepartamentoController
 from app.bd.manutencaoBD import zerarBD as cli_zerarBD
@@ -29,7 +29,7 @@ FONT_TITLE = ('Segoe UI', 16, 'bold')
 class MiniRHApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title('Mini RH - Tkinter')
+        self.title('RH PM - Tkinter')
         self.geometry('1000x600')
         self.minsize(900, 520)
         self.configure(bg=COLORS['bg'])
@@ -74,11 +74,12 @@ class MiniRHApp(tk.Tk):
         self.sidebar = tk.Frame(self, width=180, bg='#101010', highlightthickness=0, bd=0)
         self.sidebar.pack(side=tk.LEFT, fill=tk.Y, padx=0, pady=0)
         self.sidebar.pack_propagate(False)
-        tk.Label(self.sidebar, text='MINI RH', fg=COLORS['gold'], bg='#101010', font=('Segoe UI', 18, 'bold')).pack(pady=(18,2))
+        tk.Label(self.sidebar, text='RH PM', fg=COLORS['gold'], bg='#101010', font=('Segoe UI', 18, 'bold')).pack(pady=(18,2))
         tk.Label(self.sidebar, text='Tkinter', fg=COLORS['muted'], bg='#101010', font=('Segoe UI', 11)).pack(pady=(0,18))
         tk.Button(self.sidebar, text='Funcionários', command=self._build_func_section, bg=COLORS['accent'], fg='white').pack(fill='x', padx=10, pady=4)
         tk.Button(self.sidebar, text='Departamentos', command=self._build_dep_section, bg=COLORS['accent'], fg='white').pack(fill='x', padx=10, pady=4)
         tk.Button(self.sidebar, text='Recarregar', command=self._reload_current, bg='#444444', fg='white').pack(fill='x', padx=10, pady=(24,4))
+        tk.Button(self.sidebar, text='Carregar Banco', command=self._selecionar_banco, bg='#444444', fg='white').pack(fill='x', padx=10, pady=(4,4))
         tk.Button(self.sidebar, text='Zerar Banco', command=self._confirm_zerar_banco, bg='#663300', fg='white').pack(fill='x', padx=10, pady=(4,4))
         tk.Button(self.sidebar, text='Sair', command=self.destroy, bg='#552222', fg='white').pack(side='bottom', fill='x', padx=10, pady=18)
 
@@ -513,6 +514,42 @@ class MiniRHApp(tk.Tk):
     def _reload_current(self):
         if self._current_section == 'func': self._build_func_section()
         else: self._build_dep_section()
+
+    # ---------- Selecionar Banco Populado ----------
+    def _selecionar_banco(self):
+        from tkinter import filedialog
+        atual = get_db_path()
+        path = filedialog.askopenfilename(
+            title='Selecionar arquivo de banco (.db)',
+            initialdir=atual.parent if atual else '.',
+            filetypes=[('SQLite DB','*.db'), ('Todos','*.*')]
+        )
+        if not path:
+            return
+        import os
+        if not os.path.exists(path):
+            messagebox.showerror('Erro', 'Arquivo não existe.')
+            return
+        try:
+            set_db_path(path)
+            # Tenta abrir conexão para validar e garantir schema mínimo se vazio
+            from app.bd.connection import get_connection, init_db
+            novo_vazio = False
+            first_time = not os.path.getsize(path)  # arquivo zero bytes
+            with get_connection() as conn:
+                # Verifica se já há tabelas principais
+                cur = conn.cursor()
+                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('departamento','funcionario');")
+                existentes = {r[0] for r in cur.fetchall()}
+                if 'departamento' not in existentes or 'funcionario' not in existentes:
+                    novo_vazio = True
+            if novo_vazio or first_time:
+                init_db()  # cria schema
+            self._status(f"Banco alterado para: {path}")
+            self._reload_current()
+            messagebox.showinfo('Banco Carregado', f'Agora usando: {path}')
+        except Exception as e:
+            messagebox.showerror('Erro', f'Falha ao carregar banco: {e}')
 
 def run_gui():
     init_db(); app = MiniRHApp(); app.mainloop()
